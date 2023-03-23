@@ -1,11 +1,11 @@
 Step 1:
 *******
 
-Launching two servers for Master and Slave & Installing MYSQL 5.7 version!!
+Launching two servers (Centos) for Master and Slave in AWS Cloud Platform & Installing MYSQL 5.7 version!!
 
 
-installing MySQL 5.7
-********************
+installation Process - MySQL 5.7
+*******************************
 
 $ yum update -y
  
@@ -103,12 +103,14 @@ Step 2:
 ******
 
 Installing Dependencies on Both Servers
+***************************************
 
 $ yum install wget -y
 
 $ yum install https://repo.percona.com/yum/percona-release-latest.noarch.rpm
 
 $ yum install qpress
+
 
 1) Installing Percona XtraBackup 2.4
 *************************************
@@ -125,6 +127,7 @@ $ yum localinstall percona-xtrabackup-24-2.4.4-1.el7.x86_64.rpm
 
 	root@Slave_MYSQL:~#innobackupex --version
 	innobackupex version 2.4.4 Linux (x86_64) (revision id: df58cf2)
+	
 
 2) screen installation :
 ************************
@@ -136,6 +139,7 @@ $ yum install screen -y
 
 	root@Slave_MYSQL:~#screen -version
 	Screen version 4.01.00devel (GNU) 2-May-06
+	
 
 3) Installing Percona Toolkit:
 *****************************
@@ -170,13 +174,17 @@ Importing data into MASTER mysql 5.7 DATABASE
 
 $ wget https://downloads.mysql.com/docs/sakila-db.zip
 
-$ unzip sakila-db.zip ||| $ cd sakila-db |||| $ mysql > create database sakila
+$ unzip sakila-db.zip 
+
+$ cd sakila-db 
+
+$ mysql_MASTER > create database sakila
 
 $ mysql -uroot -pMaster@123 < sakila-schema.sql
 
 $ mysql -uroot -pMaster@123 < sakila-data.sql
 
-mysql> show databases;
+mysql_MASTER> show databases;
 	+--------------------+
 	| Database           |
 	+--------------------+
@@ -188,12 +196,12 @@ mysql> show databases;
 	+--------------------+
 5 rows in set (0.00 sec)
 
-mysql> use sakila
+mysql_MASTER> use sakila
 Reading table information for completion of table and column names
 You can turn off this feature to get a quicker startup with -A
 
 Database changed
-mysql> show tables;
+mysql_MASTER> show tables;
 	+----------------------------+
 	| Tables_in_sakila           |
 	+----------------------------+
@@ -607,7 +615,7 @@ step 6:
 Configuring MySQL 5.7 Master-Slave GTID Replication
 ***************************************************
 
-ON MASTER NODE: -- 3.17.186.159
+ON MASTER NODE: -- IP 3.17.186.159
 ***************
 
 $ vi /etc/my.cnf
@@ -622,7 +630,7 @@ $ systemctl restart mysqld
 mysql> SET @@GLOBAL.read_only = ON;
 
 
-ON SLAVE NODE: -- 3.144.27.9
+ON SLAVE NODE: -- IP 3.144.27.9
 *************
 
 $ vi /etc/my.cnf
@@ -654,58 +662,58 @@ mysql_SLAVE> show slave status\G
 					  Master_User: slaveuser
 					  Master_Port: 3306
 					Connect_Retry: 60
-				  Master_Log_File: mysql-bin.000001
-			  Read_Master_Log_Pos: 306
-				   Relay_Log_File: ip-172-31-4-157-relay-bin.000002
+				      Master_Log_File: mysql-bin.000001
+			 	  Read_Master_Log_Pos: 306
+			               Relay_Log_File: ip-172-31-4-157-relay-bin.000002
 					Relay_Log_Pos: 519
-			Relay_Master_Log_File: mysql-bin.000001
-				 Slave_IO_Running: Yes
-				Slave_SQL_Running: Yes
-				  Replicate_Do_DB:
-			  Replicate_Ignore_DB:
-			   Replicate_Do_Table:
-		   Replicate_Ignore_Table:
-		  Replicate_Wild_Do_Table:
-	  Replicate_Wild_Ignore_Table:
+			        Relay_Master_Log_File: mysql-bin.000001
+				     Slave_IO_Running: Yes
+				    Slave_SQL_Running: Yes
+				      Replicate_Do_DB:
+			          Replicate_Ignore_DB:
+			           Replicate_Do_Table:
+		               Replicate_Ignore_Table:
+		             Replicate_Wild_Do_Table:
+	                 Replicate_Wild_Ignore_Table:
 					   Last_Errno: 0
 					   Last_Error:
 					 Skip_Counter: 0
-			  Exec_Master_Log_Pos: 306
-				  Relay_Log_Space: 736
-				  Until_Condition: None
-				   Until_Log_File:
+			          Exec_Master_Log_Pos: 306
+				      Relay_Log_Space: 736
+				      Until_Condition: None
+				       Until_Log_File:
 					Until_Log_Pos: 0
-			   Master_SSL_Allowed: No
-			   Master_SSL_CA_File:
-			   Master_SSL_CA_Path:
-				  Master_SSL_Cert:
-				Master_SSL_Cipher:
-				   Master_SSL_Key:
-			Seconds_Behind_Master: 0
-	Master_SSL_Verify_Server_Cert: No
-					Last_IO_Errno: 0
-					Last_IO_Error:
-				   Last_SQL_Errno: 0
-				   Last_SQL_Error:
-	  Replicate_Ignore_Server_Ids:
-				 Master_Server_Id: 1
-					  Master_UUID: 72cbaaad-c70e-11ed-b8e0-027862064586
-				 Master_Info_File: /var/lib/mysql/master.info
-						SQL_Delay: 0
-			  SQL_Remaining_Delay: NULL
-		  Slave_SQL_Running_State: Slave has read all relay log; waiting for more updates
-			   Master_Retry_Count: 86400
-					  Master_Bind:
-		  Last_IO_Error_Timestamp:
-		 Last_SQL_Error_Timestamp:
-				   Master_SSL_Crl:
-			   Master_SSL_Crlpath:
-			   Retrieved_Gtid_Set: 72cbaaad-c70e-11ed-b8e0-027862064586:1
-				Executed_Gtid_Set: 72cbaaad-c70e-11ed-b8e0-027862064586:1
-					Auto_Position: 1
-			 Replicate_Rewrite_DB:
-					 Channel_Name:
-			   Master_TLS_Version:
+			           Master_SSL_Allowed: No
+			          Master_SSL_CA_File:
+			          Master_SSL_CA_Path:
+				     Master_SSL_Cert:
+				  Master_SSL_Cipher:
+				     Master_SSL_Key:
+			      Seconds_Behind_Master: 0
+	              Master_SSL_Verify_Server_Cert: No
+				      Last_IO_Errno: 0
+				      Last_IO_Error:
+				     Last_SQL_Errno: 0
+				     Last_SQL_Error:
+	                Replicate_Ignore_Server_Ids:
+				   Master_Server_Id: 1
+					Master_UUID: 72cbaaad-c70e-11ed-b8e0-027862064586
+				   Master_Info_File: /var/lib/mysql/master.info
+					  SQL_Delay: 0
+			        SQL_Remaining_Delay: NULL
+		            Slave_SQL_Running_State: Slave has read all relay log; waiting for more updates
+			         Master_Retry_Count: 86400
+				        Master_Bind:
+		            Last_IO_Error_Timestamp:
+		           Last_SQL_Error_Timestamp:
+				     Master_SSL_Crl:
+			         Master_SSL_Crlpath:
+			         Retrieved_Gtid_Set: 72cbaaad-c70e-11ed-b8e0-027862064586:1
+				  Executed_Gtid_Set: 72cbaaad-c70e-11ed-b8e0-027862064586:1
+				      Auto_Position: 1
+			       Replicate_Rewrite_DB:
+				      Channel_Name:
+			        Master_TLS_Version:
 
 
 Data was inserted into the master server and then replicated to the slave server in MySQL.
@@ -722,10 +730,10 @@ mysql_SLAVE> select * from cust;
 	+------+---------------------+
 
 
-step 6:
+step 7:
 *******
 
-uPGRADING SLAVE NODE 5.7 TO 5.8.20
+UPGRADING SLAVE NODE 5.7 TO 5.0.15
 **********************************
 
 Before updating our SLAVE NODE, we need to take the following steps to ensure a smooth upgrade process:
@@ -761,6 +769,9 @@ The second option is to take a dump of the procedure, drop it, and then run the 
 
 Taking Storage PROCEDURE Backup & Dropping them: 
 ************************************************
+
+ON MYSQL SLAVE:
+**************
 
 mysqldump -uroot -pSlave@123 -n -t -d -R EmployDB > procedure.sql
 
@@ -936,27 +947,27 @@ Modified Storage PROCEDURE -- Adding into upgraded MySQL Server
 	drop procedure  if exists get_avg_salary$$
 	PROCEDURE `get_avg_salary`(IN deptname VARCHAR(50), OUT avg_salary DECIMAL(10,2))
 	BEGIN
-    DECLARE pwd text;
-    DECLARE roll text;
-    DECLARE pwd1 text;
+   	DECLARE pwd text;
+    	DECLARE roll text;
+    	DECLARE pwd1 text;
 	SELECT AVG(salary) INTO avg_salary FROM employees WHERE department = deptname;
 	SET roll = CONCAT('A123@', deptname);
-    SELECT roll;
+    	SELECT roll;
 	SET pwd1 = SHA2(CONCAT('Roll@123!', roll), 256);
-    SET pwd = CONCAT('*6', UPPER(SUBSTRING(SHA2(CONCAT(pwd1, roll), 256), 1, 62)));
+    	SET pwd = CONCAT('*6', UPPER(SUBSTRING(SHA2(CONCAT(pwd1, roll), 256), 1, 62)));
 	INSERT INTO userdata (password, salary) VALUES (pwd, avg_salary);
 	
 	END$$
 	DELIMITER $$
 
 
-step 7:
+step 8:
 *******
 
 NOW AGAIN Configuring MySQL 5.7 Master - 8.0.15 Slave GTID Replication
 *********************************************************************
 
-ON MASTER NODE: -- 18.188.244.68
+ON MASTER NODE: -- IP 18.188.244.68
 ***************
 
 $ vi /etc/my.cnf
@@ -971,7 +982,7 @@ $ systemctl restart mysqld
 mysql_MASTER> SET @@GLOBAL.read_only = ON;
 
 
-ON SLAVE NODE: -- 3.144.27.9
+ON SLAVE NODE: -- IP 3.144.27.9
 *************
 
 $ vi /etc/my.cnf
@@ -1085,9 +1096,9 @@ I am going to execute the "percona" stored procedure with an argument of 10000.
 
 
 mysql_SLAVE> call percona(10000);
-			Query OK, 1 row affected (1.64 sec)
+	     Query OK, 1 row affected (1.64 sec)
 
-step 8:
+step 9:
 *******
 
 Upgrade the MySQL version of the master server from 5.7 to 8.0.15:
@@ -1232,7 +1243,7 @@ $ mysqlcheck -uroot -p --all-databases --check-upgrade
 	
 
 
-step 9:
+step 10:
 *******
 
 To switch the role, we need to make the "MySQL slave server" the New "MySQL master server":
@@ -1256,7 +1267,7 @@ ON NEW MASTER SERVER:
 *********************
 
 mysql_NEW_MASTER> insert into cust(id) values(11);
-				  Query OK, 1 row affected (0.01 sec)
+		  Query OK, 1 row affected (0.01 sec)
 
 
 mysql_NEW_MASTER> select * from cust;
@@ -1287,6 +1298,7 @@ $ scp -r -p /var/lib/mysql centos@3.144.96.112:/home/centos/
 binlog.000005                                                                           100%  178    83.2KB/s   00:00
 binlog.000007                                                                           100%  178    71.4KB/s   00:00
 binlog.000019                                                                           100% 2294   998.5KB/s   00:00
+
 	
 ON NEW SLAVE SERVER:
 ********************
@@ -1320,13 +1332,13 @@ mysql_NEW_SLAVE> select * from cust;
 
 
 
-step 10:
+step 11:
 ********
 
 Finally, Configuring NEW MySQL Master - NEW MYSQL Slave NORMAL Replication
 **************************************************************************
 
-ON NEW MASTER NODE: -- 3.142.135.164
+ON NEW MASTER NODE: -- IP 3.142.135.164
 ******************
 
 $ vi /etc/my.cnf
@@ -1348,7 +1360,7 @@ mysql_NEW_MASTER> show master status\G
 
 
 
-ON NEW SLAVE NODE: -- 18.224.33.73
+ON NEW SLAVE NODE: -- IP 18.224.33.73
 *****************
 
 $ vi /etc/my.cnf
@@ -1452,3 +1464,6 @@ mysql_NEW_SLAVE> select * from cust;
 	|   14 | 2023-03-23 06:40:16 |
 	+------+---------------------+
 	14 rows in set (0.00 sec)
+	
+	
+That's It! WE're DOne :)
