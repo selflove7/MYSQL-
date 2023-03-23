@@ -1,0 +1,1454 @@
+Step 1:
+*******
+
+Launching two servers for Master and Slave & Installing MYSQL 5.7 version!!
+
+
+installing MySQL 5.7
+********************
+
+$ yum update -y
+ 
+$ yum remove mariadb*
+ 
+$ yum clean all
+ 
+$ rpm --import https://repo.mysql.com/RPM-GPG-KEY-mysql-2022
+  
+$ yum localinstall https://dev.mysql.com/get/mysql57-community-release-el7-11.noarch.rpm
+ 
+$ yum install mysql-community-server
+ 
+$ systemctl start mysqld
+  
+$ cat /var/log/mysqld.log
+
+$ mysql_secure_installation
+ 
+$ mysql -uroot -p
+
+
+ON MASTER NODE:
+**************
+
+mysql -uroot -pMaster@123
+
+mysql_MASTER> \s
+
+	mysql  Ver 14.14 Distrib 5.7.41, for Linux (x86_64) using  EditLine wrapper
+
+	Connection id:          5
+	Current database:
+	Current user:           root@localhost
+	SSL:                    Not in use
+	Current pager:          stdout
+	Using outfile:          ''
+	Using delimiter:        ;
+	Server version:         5.7.41 MySQL Community Server (GPL)
+	Protocol version:       10
+	Connection:             Localhost via UNIX socket
+	Server characterset:    latin1
+	Db     characterset:    latin1
+	Client characterset:    utf8
+	Conn.  characterset:    utf8
+	UNIX socket:            /var/lib/mysql/mysql.sock
+	Uptime:                 3 min 15 sec
+
+	Threads: 1  Questions: 14  Slow queries: 0  Opens: 114  Flush tables: 1  Open tables: 107  Queries per second avg: 0.071
+	--------------
+
+mysql> exit
+Bye
+[root@ip-172-31-7-108 ~]# mysql --version
+	mysql  Ver 14.14 Distrib 5.7.41, for Linux (x86_64) using  EditLine wrapper
+
+
+ON SLAVE NODE:
+**************
+
+mysql -uroot -pSlave@123
+
+
+mysql_SLAVE> \s
+--------------
+	mysql  Ver 14.14 Distrib 5.7.41, for Linux (x86_64) using  EditLine wrapper
+
+	Connection id:          7
+	Current database:
+	Current user:           root@localhost
+	SSL:                    Not in use
+	Current pager:          stdout
+	Using outfile:          ''
+	Using delimiter:        ;
+	Server version:         5.7.41 MySQL Community Server (GPL)
+	Protocol version:       10
+	Connection:             Localhost via UNIX socket
+	Server characterset:    latin1
+	Db     characterset:    latin1
+	Client characterset:    utf8
+	Conn.  characterset:    utf8
+	UNIX socket:            /var/lib/mysql/mysql.sock
+	Uptime:                 1 min 48 sec
+
+	Threads: 1  Questions: 17  Slow queries: 0  Opens: 114  Flush tables: 1  Open tables: 107  Queries per second avg: 0.157
+	--------------
+
+mysql> exit
+Bye
+[root@ip-172-31-4-157 ~]# mysql --version
+	mysql  Ver 14.14 Distrib 5.7.41, for Linux (x86_64) using  EditLine wrapper
+
+
+Step 2: 
+******
+
+Installing Dependencies on Both Servers
+
+$ yum install wget -y
+
+$ yum install https://repo.percona.com/yum/percona-release-latest.noarch.rpm
+
+$ yum install qpress
+
+1) Installing Percona XtraBackup 2.4
+*************************************
+
+$ wget https://www.percona.com/downloads/XtraBackup/Percona-XtraBackup-2.4.4/\
+binary/redhat/7/x86_64/percona-xtrabackup-24-2.4.4-1.el7.x86_64.rpm
+
+$ yum localinstall percona-xtrabackup-24-2.4.4-1.el7.x86_64.rpm
+
+
+	root@Master_MYSQL:~#innobackupex --version
+	innobackupex version 2.4.4 Linux (x86_64) (revision id: df58cf2)
+
+
+	root@Slave_MYSQL:~#innobackupex --version
+	innobackupex version 2.4.4 Linux (x86_64) (revision id: df58cf2)
+
+2) screen installation :
+************************
+
+$ yum install screen -y 
+
+	root@Master_MYSQL:~#screen -version
+	Screen version 4.01.00devel (GNU) 2-May-06
+
+	root@Slave_MYSQL:~#screen -version
+	Screen version 4.01.00devel (GNU) 2-May-06
+
+3) Installing Percona Toolkit:
+*****************************
+
+$ yum install wget 
+
+$ wget https://www.percona.com/downloads/percona-toolkit/3.2.0/binary/redhat/7/x86_64/percona-toolkit-3.2.0-1.el7.x86_64.rpm
+
+$ yum install -y percona-toolkit-3.2.0-1.el7.x86_64.rpm
+
+	root@Master_MYSQL:~#pt-query-digest --version
+	pt-query-digest 3.2.0
+	root@Master_MYSQL:~#pt-duplicate-key-checker --version
+	pt-duplicate-key-checker 3.2.0
+	root@Master_MYSQL:~#pt-online-schema-change --version
+	pt-online-schema-change 3.2.0
+
+
+	root@Slave_MYSQL:~#pt-query-digest --version
+	pt-query-digest 3.2.0
+	root@Slave_MYSQL:~#pt-online-schema-change --version
+	pt-online-schema-change 3.2.0
+	root@Slave_MYSQL:~#pt-duplicate-key-checker --version
+	pt-duplicate-key-checker 3.2.0
+
+
+step 3:
+*******
+
+Importing data into MASTER mysql 5.7 DATABASE
+*********************************************
+
+$ wget https://downloads.mysql.com/docs/sakila-db.zip
+
+$ unzip sakila-db.zip ||| $ cd sakila-db |||| $ mysql > create database sakila
+
+$ mysql -uroot -pMaster@123 < sakila-schema.sql
+
+$ mysql -uroot -pMaster@123 < sakila-data.sql
+
+mysql> show databases;
+	+--------------------+
+	| Database           |
+	+--------------------+
+	| information_schema |
+	| mysql              |
+	| performance_schema |
+	| sakila             |
+	| sys                |
+	+--------------------+
+5 rows in set (0.00 sec)
+
+mysql> use sakila
+Reading table information for completion of table and column names
+You can turn off this feature to get a quicker startup with -A
+
+Database changed
+mysql> show tables;
+	+----------------------------+
+	| Tables_in_sakila           |
+	+----------------------------+
+	| actor                      |
+	| actor_info                 |
+	| address                    |
+	| category                   |
+	| city                       |
+	| country                    |
+	| customer                   |
+	| customer_list              |
+	| film                       |
+	| film_actor                 |
+	| film_category              |
+	| film_list                  |
+	| film_text                  |
+	| inventory                  |
+	| language                   |
+	| nicer_but_slower_film_list |
+	| payment                    |
+	| rental                     |
+	| sales_by_film_category     |
+	| sales_by_store             |
+	| staff                      |
+	| staff_list                 |
+	| store                      |
+	+----------------------------+
+23 rows in set (0.00 sec)
+
+mysql> select count(*) from actor;
+	+----------+
+	| count(*) |
+	+----------+
+	|      200 |
+	+----------+
+1 row in set (0.00 sec)
+
+
+ADDING this variables in my.cnf ON MASTER & SLAVE NODE
+*****************************************************
+
+# InnoDB Variables 
+
+	innodb_log_buffer_size=10M
+	ignore_builtin_innodb=0
+	innodb_buffer_pool_size=500M
+	innodb_log_file_size=1G
+	innodb_buffer_pool_instances=1
+	innodb_lru_scan_depth=256
+	innodb_checksums=0
+	innodb_read_io_threads=32
+	innodb_locks_unsafe_for_binlog=0
+	innodb_large_prefix=1
+	innodb_write_io_threads=32
+	innodb_flush_log_at_trx_commit=2
+	query_cache_limit= 1048576
+	innodb_stats_persistent_sample_pages=70
+	query_cache_size= 1048576
+	innodb_stats_transient_sample_pages=200
+	innodb_buffer_pool_dump_pct=70
+	innodb_io_capacity=600
+	query_cache_type=0
+	innodb_io_capacity_max=4000
+	show_compatibility_56=0
+
+ALSO Creating Tables, Inserting DATA and Procedure : ON ONLY MASTER NODE
+************************************************************************
+
+	CREATE TABLE `employees` (
+	  `salary` bigint(20) DEFAULT NULL,
+	  `department` varchar(20) DEFAULT NULL
+	) ENGINE=InnoDB;
+
+mysql> select * from employees;
+	+--------+------------+
+	| salary | department |
+	+--------+------------+
+	|  10000 | Mechanical |
+	|  12000 | CSE        |
+	|  13000 | ECE        |
+	|  14000 | EEE        |
+	+--------+------------+
+
+	CREATE TABLE `userdata` (
+	  `password` text,
+	  `salary` bigint(20) DEFAULT NULL
+	) ENGINE=InnoDB; 
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+	DELIMITER $$
+	drop procedure  if exists get_avg_salary$$
+	CREATE PROCEDURE `get_avg_salary`(IN deptname VARCHAR(50), OUT avg_salary DECIMAL(10,2))
+	BEGIN
+	declare pwd text;
+	declare roll text;
+	declare pwd1 text;
+
+	SELECT AVG(salary) INTO avg_salary FROM employees WHERE department = deptname;
+	 
+	set roll=(select concat('A123@',deptname));
+	 
+	select roll;
+	 
+	set pwd1=(select password('Roll@123!')); 
+
+	set pwd=(select concat(pwd1,roll));
+	  
+	  
+	insert into userdata(password,salary) values(pwd,avg_salary);
+	  
+	END$$
+	DELIMITER $$
+	
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+	CREATE TABLE `cust` (
+	  `id` bigint(20) DEFAULT NULL,
+	  `joindate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+	) ENGINE=InnoDB;
+	
+
+mysql> select * from cust;
+	+------+---------------------+
+	| id   | joindate            |
+	+------+---------------------+
+	|    1 | 2023-03-20 05:41:33 |
+	|    2 | 2023-03-20 05:41:37 |
+	|    3 | 2023-03-20 05:41:39 |
+	+------+---------------------+
+
+
+
+# insert SOME DATA into THESE Table 
+
+
+USING SCREEN To CALL PROCEDURE:
+******************************
+
+$ screen -S percona
+
+	create table percona (
+	id int not null auto_increment primary key,
+	age int(10),
+	name varchar(200),
+	dob date,
+	mobile bigint(15),
+	area varchar(200),
+	country varchar(200),
+	code varchar(200)
+	);
+
+
+	delimiter $$
+
+	drop procedure  if exists percona $$
+	create procedure percona (in num int)
+	begin
+	declare V_FLOOR_RAND varchar(200);
+	declare V_dob date;
+	declare V_mobile varchar(200);
+	declare V_REF_NO varchar(200);
+	declare V_name varchar(200);
+
+	declare i int default 0;
+	while i < num do
+
+	SET V_FLOOR_RAND=(select FLOOR(2500 + RAND() * 89));
+	SET V_REF_NO=CONCAT('90','100',DATE_FORMAT(now(),'%d%m%y%h%i%s'),V_FLOOR_RAND);
+	SET V_mobile=(select FLOOR(8190920000 + RAND() * 8559));
+	set V_name=CONCAT('Raja','11','22',DATE_FORMAT(now(),'%d%m%y%h%i%s'),V_FLOOR_RAND);
+
+	insert into percona (age,name,dob,mobile,area,country,code) values ('25',V_name,'1993-12-19',V_mobile,'tst','india',V_REF_NO);
+	set i = i + 1;
+	end while;
+	end $$
+	delimiter $$
+
+
+mysql> call percona(5000000);
+
+mysql> show processlist;
+	+----+------+-----------+-----------+---------+------+----------------+-----------------------+
+	| Id | User | Host      | db        | Command | Time | State          | Info                  |
+	+----+------+-----------+-----------+---------+------+----------------+-----------------------+
+	|  2 | root | localhost | PerconaDB | Query   |    0 | Opening tables | call percona(5000000) |
+	|  6 | root | localhost | NULL      | Query   |    0 | starting       | show processlist      |
+	+----+------+-----------+-----------+---------+------+----------------+-----------------------+
+
+
+mysql> call percona(5000000);
+Query OK, 1 row affected (7 min 47.21 sec)
+
+
+mysql> select count(*) from percona;
+	+----------+
+	| count(*) |
+	+----------+
+	|  5000000 |
+	+----------+
+1 row in set (1.09 sec)
+
+
+
+step 4:
+*******
+
+Creating Multiple MySQL Users Locally and Remotely
+**************************************************
+
+
+mysql> select user,host from mysql.user;
+	+----------------+------------+
+	| user           | host       |
+	+----------------+------------+
+	| slaveuser      | %          |
+	| Kumar          | 3.144.27.9 |
+	| SIU_user2      | 3.144.27.9 |
+	| SIU_user3      | 3.144.27.9 |
+	| select_user2   | 3.144.27.9 |
+	| Backup_Admin   | localhost  |
+	| SIU_user1      | localhost  |
+	| Shiva          | localhost  |
+	| mysql.session  | localhost  |
+	| mysql.sys      | localhost  |
+	| procedure_user | localhost  |
+	| root           | localhost  |
+	| select_user1   | localhost  |
+	+----------------+------------+
+13 rows in set (0.00 sec)
+
+
+mysql> show grants for 'select_user1'@'localhost';
++---------------------------------------------------+
+| Grants for select_user1@localhost                 |
++---------------------------------------------------+
+| GRANT SELECT ON *.* TO 'select_user1'@'localhost' |
++---------------------------------------------------+
+
+mysql> show grants for 'select_user2'@'3.144.27.9';
++----------------------------------------------------+
+| Grants for select_user2@3.144.27.9                 |
++----------------------------------------------------+
+| GRANT SELECT ON *.* TO 'select_user2'@'3.144.27.9' |
++----------------------------------------------------+
+
+mysql> show grants for 'Shiva'@'localhost';
++----------------------------------------------------+
+| Grants for Shiva@localhost                         |
++----------------------------------------------------+
+| GRANT ALL PRIVILEGES ON *.* TO 'Shiva'@'localhost' |
++----------------------------------------------------+
+
+
+mysql> show grants for 'Kumar'@'3.144.27.9';
++-----------------------------------------------------+
+| Grants for Kumar@3.144.27.9                         |
++-----------------------------------------------------+
+| GRANT ALL PRIVILEGES ON *.* TO 'Kumar'@'3.144.27.9' |
++-----------------------------------------------------+
+
+
+mysql> show grants for 'slaveuser'@'%';
++---------------------------------------------------+
+| Grants for slaveuser@%                            |
++---------------------------------------------------+
+| GRANT REPLICATION SLAVE ON *.* TO 'slaveuser'@'%' |
++---------------------------------------------------+
+
+
+mysql> show grants for 'procedure_user'@'localhost';
++------------------------------------------------------+
+| Grants for procedure_user@localhost                  |
++------------------------------------------------------+
+| GRANT EXECUTE ON *.* TO 'procedure_user'@'localhost' |
++------------------------------------------------------+
+
+
+mysql> show grants for 'SIU_user1'@'localhost';
++-------------------------------------------------------------------------+
+| Grants for SIU_user1@localhost                                          |
++-------------------------------------------------------------------------+
+| GRANT USAGE ON *.* TO 'SIU_user1'@'localhost'                           |
+| GRANT SELECT, INSERT, UPDATE ON `EmployDB`.* TO 'SIU_user1'@'localhost' |
++-------------------------------------------------------------------------+
+
+
+mysql> show grants for 'SIU_user2'@'3.144.27.9';
++--------------------------------------------------------------------------+
+| Grants for SIU_user2@3.144.27.9                                          |
++--------------------------------------------------------------------------+
+| GRANT USAGE ON *.* TO 'SIU_user2'@'3.144.27.9'                           |
+| GRANT SELECT, INSERT, UPDATE ON `EmployDB`.* TO 'SIU_user2'@'3.144.27.9' |
++--------------------------------------------------------------------------+
+
+
+mysql> show grants for 'SIU_user3'@'3.144.27.9';
++-----------------------------------------------------------------+
+| Grants for SIU_user3@3.144.27.9                                 |
++-----------------------------------------------------------------+
+| GRANT SELECT, INSERT, UPDATE ON *.* TO 'SIU_user3'@'3.144.27.9' |
++-----------------------------------------------------------------+
+
+
+mysql> show grants for 'Backup_Admin'@'localhost';
++------------------------------------------------------------------------------------------------+
+| Grants for Backup_Admin@localhost                                                              |
++------------------------------------------------------------------------------------------------+
+| GRANT SELECT, INSERT, FILE ON *.* TO 'Backup_Admin'@'localhost'                                |
+| GRANT SELECT ON `performance_schema`.`replication_group_members` TO 'Backup_Admin'@'localhost' |
++------------------------------------------------------------------------------------------------+
+
+
+
+step 5:
+*******
+
+Restoring Data to MySQL Slave Server using XtraBackup Tool
+**********************************************************
+
+ON MASTER NODE
+**************
+
+mysql_MASTER> show databases;
+	+--------------------+
+	| Database           |
+	+--------------------+
+	| information_schema |
+	| EmployDB           |
+	| PerconaDB          |
+	| TestDB             |
+	| mysql              |
+	| performance_schema |
+	| sakila             |
+	| sys                |
+	+--------------------+
+
+$ xtrabackup --user=root --password=Master@123 --backup --compress --target-dir=/root/fullbackup/
+
+xtrabackup: Transaction log of lsn (1773703758) to (1773703767) was copied.
+230320 11:03:02 completed OK!
+
+
+Now Copying BACKUP FILES TO SLAVE Using SCP:
+********************************************
+
+$ scp -r fullbackup/ centos@3.144.27.9:/home/centos/
+
+
+xtrabackup_logfile.qp                                                                   100%  304   213.0KB/s   00:00
+ibdata1.qp                                                                              100%  871KB  41.8MB/s   00:00
+.
+.
+.
+.
+backup-my.cnf.qp                                                                        100%  416   279.7KB/s   00:00
+xtrabackup_info.qp                                                                      100%  460   324.3KB/s   00:00
+
+
+ON SLAVE NODE:
+*************
+
+
+$ xtrabackup --user=root --password=Master@123  --decompress --remove-original --target-dir=/root/fullbackup/
+
+$ xtrabackup --prepare --apply-log-only --target-dir=/root/fullbackup/
+
+$ xtrabackup --prepare  --target-dir=/root/fullbackup/
+
+$ systemctl stop mysqld
+
+$ cd /var/lib/
+
+$ mv mysql mysql_old
+
+$ xtrabackup --copy-back --target-dir=/root/fullbackup/
+
+	230320 11:00:06 [01]        ...done
+	230320 11:00:06 [01] Copying ./ib_buffer_pool to /var/lib/mysql/ib_buffer_pool
+	230320 11:00:06 [01]        ...done
+	230320 11:00:06 [01] Copying ./xtrabackup_info to /var/lib/mysql/xtrabackup_info
+	230320 11:00:06 [01]        ...done
+	230320 11:00:06 [01] Copying ./ibtmp1 to /var/lib/mysql/ibtmp1
+	230320 11:00:06 [01]        ...done
+	230320 11:00:06 completed OK!
+
+
+$ chown -R mysql:mysql /var/lib/mysql
+
+$ systemctl start mysqld
+
+mysql_SLAVE> show databases;
+	+--------------------+
+	| Database           |
+	+--------------------+
+	| information_schema |
+	| EmployDB           |
+	| PerconaDB          |
+	| TestDB             |
+	| mysql              |
+	| performance_schema |
+	| sakila             |
+	| sys                |
+	+--------------------+
+
+
+
+step 6:
+*******
+
+Configuring MySQL 5.7 Master-Slave GTID Replication
+***************************************************
+
+ON MASTER NODE: -- 3.17.186.159
+***************
+
+$ vi /etc/my.cnf
+
+	server-id= 1
+	log_bin= mysql-bin
+	gtid_mode = ON
+	enforce_gtid_consistency = ON
+	
+$ systemctl restart mysqld
+
+mysql> SET @@GLOBAL.read_only = ON;
+
+
+ON SLAVE NODE: -- 3.144.27.9
+*************
+
+$ vi /etc/my.cnf
+
+	server-id= 2
+	gtid_mode = ON
+	enforce_gtid_consistency = ON
+	binlog_format=ROW
+	skip-slave-start
+
+	#replica-parallel-workers=0
+	#log-replica-updates=ON
+	#skip-replica-start=ON
+	
+$ systemctl restart mysqld
+
+mysql> SET @@GLOBAL.read_only = ON;
+
+mysql> change master to master_host="3.17.186.159",
+    -> master_port=3306, master_user="slaveuser",
+    -> master_password="Slave@123!@#",
+    -> master_auto_position=1;
+
+
+mysql_SLAVE> show slave status\G
+	*************************** 1. row ***************************
+				   Slave_IO_State: Waiting for master to send event
+					  Master_Host: 3.17.186.159
+					  Master_User: slaveuser
+					  Master_Port: 3306
+					Connect_Retry: 60
+				  Master_Log_File: mysql-bin.000001
+			  Read_Master_Log_Pos: 306
+				   Relay_Log_File: ip-172-31-4-157-relay-bin.000002
+					Relay_Log_Pos: 519
+			Relay_Master_Log_File: mysql-bin.000001
+				 Slave_IO_Running: Yes
+				Slave_SQL_Running: Yes
+				  Replicate_Do_DB:
+			  Replicate_Ignore_DB:
+			   Replicate_Do_Table:
+		   Replicate_Ignore_Table:
+		  Replicate_Wild_Do_Table:
+	  Replicate_Wild_Ignore_Table:
+					   Last_Errno: 0
+					   Last_Error:
+					 Skip_Counter: 0
+			  Exec_Master_Log_Pos: 306
+				  Relay_Log_Space: 736
+				  Until_Condition: None
+				   Until_Log_File:
+					Until_Log_Pos: 0
+			   Master_SSL_Allowed: No
+			   Master_SSL_CA_File:
+			   Master_SSL_CA_Path:
+				  Master_SSL_Cert:
+				Master_SSL_Cipher:
+				   Master_SSL_Key:
+			Seconds_Behind_Master: 0
+	Master_SSL_Verify_Server_Cert: No
+					Last_IO_Errno: 0
+					Last_IO_Error:
+				   Last_SQL_Errno: 0
+				   Last_SQL_Error:
+	  Replicate_Ignore_Server_Ids:
+				 Master_Server_Id: 1
+					  Master_UUID: 72cbaaad-c70e-11ed-b8e0-027862064586
+				 Master_Info_File: /var/lib/mysql/master.info
+						SQL_Delay: 0
+			  SQL_Remaining_Delay: NULL
+		  Slave_SQL_Running_State: Slave has read all relay log; waiting for more updates
+			   Master_Retry_Count: 86400
+					  Master_Bind:
+		  Last_IO_Error_Timestamp:
+		 Last_SQL_Error_Timestamp:
+				   Master_SSL_Crl:
+			   Master_SSL_Crlpath:
+			   Retrieved_Gtid_Set: 72cbaaad-c70e-11ed-b8e0-027862064586:1
+				Executed_Gtid_Set: 72cbaaad-c70e-11ed-b8e0-027862064586:1
+					Auto_Position: 1
+			 Replicate_Rewrite_DB:
+					 Channel_Name:
+			   Master_TLS_Version:
+
+
+Data was inserted into the master server and then replicated to the slave server in MySQL.
+*****************************************************************************************
+
+mysql_SLAVE> select * from cust;
+	+------+---------------------+
+	| id   | joindate            |
+	+------+---------------------+
+	|    1 | 2023-03-20 05:41:33 |
+	|    2 | 2023-03-20 05:41:37 |
+	|    3 | 2023-03-20 05:41:39 |
+	|    4 | 2023-03-20 11:57:17 |
+	+------+---------------------+
+
+
+step 6:
+*******
+
+uPGRADING SLAVE NODE 5.7 TO 5.8.20
+**********************************
+
+Before updating our SLAVE NODE, we need to take the following steps to ensure a smooth upgrade process:
+*******************************************************************************************************
+
+	- Verify the data count on both the master and slave nodes to ensure that they match.
+
+	- Check the "my.cnf" configuration file and ensure that it is compatible with the latest version.
+
+	- Collect all production queries by setting the slow query log value to -0.
+
+	- Use the pt-query-digest tool to merge duplicate queries and obtain a unique set of slow queries.
+
+	- Optional: Use the pt-fingerprint tool to obtain query structure information.
+
+	- Back up user grants from both the master and slave databases using the pt-show-grants tool, to enable easy restoration of users in case of any issues or crashes.
+
+	- Back up stored procedures, event schedulers, databases, and triggers.
+
+	- Prepare an upgrade plan that takes into account both positive and negative possibilities after the upgrade.
+
+	- Take a backup using xtrabackup to facilitate easy restoration and slave configuration.
+
+	- Use the pt-upgrade tool to check the upgrade process. This tool simplifies and facilitates the upgrade process, making it easy to understand and follow.
+
+
+There are two options available to modify a storage procedure in MySQL from version 5.7 to 8.0.15.
+
+The first option is to directly modify the storage procedure in MySQL 5.7 to match the requirements of version 8.0.15.
+
+The second option is to take a dump of the procedure, drop it, and then run the modified storage procedure in version 8.0.15 to ensure that it is compatible with the new version. I am choosing Option "2"
+
+
+Taking Storage PROCEDURE Backup & Dropping them: 
+************************************************
+
+mysqldump -uroot -pSlave@123 -n -t -d -R EmployDB > procedure.sql
+
+SHOW CREATE PROCEDURE get_avg_salary;
+
+DROP PROCEDURE IF EXISTS get_avg_salary;
+
+
+Checking the "my.cnf" configuration file and ensure that it is compatible with the latest version:
+************************************************************************************************
+
+innodb_log_buffer_size=10M
+innodb_buffer_pool_size=500M
+innodb_log_file_size=1G
+innodb_buffer_pool_instances=1
+innodb_lru_scan_depth=256
+innodb_read_io_threads=32
+innodb_write_io_threads=32
+innodb_flush_log_at_trx_commit=2
+innodb_stats_persistent_sample_pages=70
+innodb_stats_transient_sample_pages=200
+innodb_buffer_pool_dump_pct=70
+innodb_io_capacity=600
+innodb_io_capacity_max=4000
+
+
+[ These variables not applicable in MySQL 8.0.15, so they have been excluded from the above list ]
+
+#innodb_checksum_algorithm=none
+#innodb_locks_unsafe_for_binlog=OFF
+#innodb_large_prefix=ON
+#ignore_builtin_innodb 
+#query_cache_limit 
+#query_cache_size 
+#query_cache_type
+#show_compatibility_56
+
+
+
+NOW UPGRADING MYSQL SLAVE NODE:
+******************************
+
+$ yum update -y 
+
+$ mysqlcheck -uroot -pSlave@123 --all-databases --check-upgrade
+
+$ mysql_upgrade -uroot -pSlave@123
+
+
+		mysql_upgrade: [Warning] Using a password on the command line interface can be insecure.
+		Checking if update is needed.
+		Checking server version.
+		Running queries to upgrade MySQL server.
+		Upgrading system table data.
+		Checking system database.
+		mysql.columns_priv                                 OK
+		mysql.component                                    OK
+		mysql.db                                           OK
+		mysql.default_roles                                OK
+		mysql.engine_cost                                  OK
+		mysql.func                                         OK
+		mysql.general_log                                  OK
+		mysql.global_grants                                OK
+		mysql.gtid_executed                                OK
+		mysql.help_category                                OK
+		mysql.help_keyword                                 OK
+		mysql.help_relation                                OK
+		mysql.help_topic                                   OK
+		mysql.innodb_index_stats                           OK
+		mysql.innodb_table_stats                           OK
+		mysql.ndb_binlog_index                             OK
+		mysql.password_history                             OK
+		mysql.plugin                                       OK
+		mysql.procs_priv                                   OK
+		mysql.proxies_priv                                 OK
+		mysql.role_edges                                   OK
+		mysql.server_cost                                  OK
+		mysql.servers                                      OK
+		mysql.slave_master_info                            OK
+		mysql.slave_relay_log_info                         OK
+		mysql.slave_worker_info                            OK
+		mysql.slow_log                                     OK
+		mysql.tables_priv                                  OK
+		mysql.time_zone                                    OK
+		mysql.time_zone_leap_second                        OK
+		mysql.time_zone_name                               OK
+		mysql.time_zone_transition                         OK
+		mysql.time_zone_transition_type                    OK
+		mysql.user                                         OK
+		Found outdated sys schema version 1.5.2.
+		Upgrading the sys schema.
+		Checking databases.
+		EmployDB.employees                                 OK
+		EmployDB.userdata                                  OK
+		PerconaDB.percona                                  OK
+		TestDB.cust                                        OK
+		sakila.actor                                       OK
+		sakila.address                                     OK
+		sakila.category                                    OK
+		sakila.city                                        OK
+		sakila.country                                     OK
+		sakila.customer                                    OK
+		sakila.film                                        OK
+		sakila.film_actor                                  OK
+		sakila.film_category                               OK
+		sakila.film_text                                   OK
+		sakila.inventory                                   OK
+		sakila.language                                    OK
+		sakila.payment                                     OK
+		sakila.rental                                      OK
+		sakila.staff                                       OK
+		sakila.store                                       OK
+		sys.sys_config                                     OK
+		Upgrade process completed successfully.
+
+
+$ systemctl stop mysqld
+
+$ cp -p -r /var/lib/mysql /opt/
+
+$ yum list installed | grep -i mysql
+
+$ yum install yum-utils 
+
+$ rpm -ivh https://dev.mysql.com/get/mysql80-community-release-el7-3.noarch.rpm 
+ 
+$ repoquery --show-duplicate mysql*
+ 
+repoquery --show-duplicate mysql-community-common 
+repoquery --show-duplicate mysql-community-libs
+repoquery --show-duplicate mysql-community-client 
+repoquery --show-duplicate mysql-community-server
+
+yum install -y mysql-community-common-0:8.0.15-1.el7.x86_64
+yum install -y mysql-community-libs-0:8.0.15-1.el7.x86_64
+yum install -y mysql-community-client-0:8.0.15-1.el7.x86_64
+yum install -y mysql-community-server-0:8.0.15-1.el7.x86_64
+
+$ systemctl start mysqld
+
+$ mysqlcheck -uroot -p --all-databases --check-upgrade
+
+	mysql> \s
+	--------------
+	mysql  Ver 8.0.15 for Linux on x86_64 (MySQL Community Server - GPL)
+
+	Connection id:          12
+	Current database:
+	Current user:           root@localhost
+	SSL:                    Not in use
+	Current pager:          stdout
+	Using outfile:          ''
+	Using delimiter:        ;
+	Server version:         8.0.15 MySQL Community Server - GPL
+	Protocol version:       10
+	Connection:             Localhost via UNIX socket
+	Server characterset:    utf8mb4
+	Db     characterset:    utf8mb4
+	Client characterset:    utf8mb4
+	Conn.  characterset:    utf8mb4
+	UNIX socket:            /var/lib/mysql/mysql.sock
+	Uptime:                 1 min 49 sec
+
+	Threads: 2  Questions: 13530  Slow queries: 0  Opens: 667  Flush tables: 2  Open tables: 322  Queries per second avg: 124.128
+	--------------
+
+
+Modified Storage PROCEDURE -- Adding into upgraded MySQL Server
+*************************************************************** 
+
+	DELIMITER $$
+	
+	drop procedure  if exists get_avg_salary$$
+	PROCEDURE `get_avg_salary`(IN deptname VARCHAR(50), OUT avg_salary DECIMAL(10,2))
+	BEGIN
+    DECLARE pwd text;
+    DECLARE roll text;
+    DECLARE pwd1 text;
+	SELECT AVG(salary) INTO avg_salary FROM employees WHERE department = deptname;
+	SET roll = CONCAT('A123@', deptname);
+    SELECT roll;
+	SET pwd1 = SHA2(CONCAT('Roll@123!', roll), 256);
+    SET pwd = CONCAT('*6', UPPER(SUBSTRING(SHA2(CONCAT(pwd1, roll), 256), 1, 62)));
+	INSERT INTO userdata (password, salary) VALUES (pwd, avg_salary);
+	
+	END$$
+	DELIMITER $$
+
+
+step 7:
+*******
+
+NOW AGAIN Configuring MySQL 5.7 Master - 8.0.15 Slave GTID Replication
+*********************************************************************
+
+ON MASTER NODE: -- 18.188.244.68
+***************
+
+$ vi /etc/my.cnf
+
+	server-id= 1
+	log_bin= mysql-bin
+	gtid_mode = ON
+	enforce_gtid_consistency = ON
+	
+$ systemctl restart mysqld
+
+mysql_MASTER> SET @@GLOBAL.read_only = ON;
+
+
+ON SLAVE NODE: -- 3.144.27.9
+*************
+
+$ vi /etc/my.cnf
+
+	server-id=2
+	gtid_mode=ON
+	enforce_gtid_consistency=ON
+	
+	#log-replica-updates=ON
+	#skip-replica-start=ON
+	#binlog_format=ROW
+	#skip-slave-start
+
+	
+$ systemctl restart mysqld
+
+mysql_SLAVE> SET @@GLOBAL.read_only = ON;
+
+mysql_SLAVE> change master to master_host="3.144.96.112",
+			master_port=3306, master_user="slaveuser",
+			master_password="Slave@123!@#",
+			master_auto_position=1;
+	
+mysql_SLAVE> show slave status\G
+	*************************** 1. row ***************************
+				   Slave_IO_State: Waiting for master to send event
+					  Master_Host: 18.188.244.68
+					  Master_User: slaveuser
+					  Master_Port: 3306
+					Connect_Retry: 60
+				  Master_Log_File: mysql-bin.000004
+			  Read_Master_Log_Pos: 194
+				   Relay_Log_File: ip-172-31-4-157-relay-bin.000002
+					Relay_Log_Pos: 368
+			Relay_Master_Log_File: mysql-bin.000004
+				 Slave_IO_Running: Yes
+				Slave_SQL_Running: Yes
+				  Replicate_Do_DB:
+			  Replicate_Ignore_DB:
+			   Replicate_Do_Table:
+		   Replicate_Ignore_Table:
+		  Replicate_Wild_Do_Table:
+	  Replicate_Wild_Ignore_Table:
+					   Last_Errno: 0
+					   Last_Error:
+					 Skip_Counter: 0
+			  Exec_Master_Log_Pos: 194
+				  Relay_Log_Space: 586
+				  Until_Condition: None
+				   Until_Log_File:
+					Until_Log_Pos: 0
+			   Master_SSL_Allowed: No
+			   Master_SSL_CA_File:
+			   Master_SSL_CA_Path:
+				  Master_SSL_Cert:
+				Master_SSL_Cipher:
+				   Master_SSL_Key:
+			Seconds_Behind_Master: 0
+	Master_SSL_Verify_Server_Cert: No
+					Last_IO_Errno: 0
+					Last_IO_Error:
+				   Last_SQL_Errno: 0
+				   Last_SQL_Error:
+	  Replicate_Ignore_Server_Ids:
+				 Master_Server_Id: 1
+					  Master_UUID: 72cbaaad-c70e-11ed-b8e0-027862064586
+				 Master_Info_File: mysql.slave_master_info
+						SQL_Delay: 0
+			  SQL_Remaining_Delay: NULL
+		  Slave_SQL_Running_State: Slave has read all relay log; waiting for more updates
+			   Master_Retry_Count: 86400
+					  Master_Bind:
+		  Last_IO_Error_Timestamp:
+		 Last_SQL_Error_Timestamp:
+				   Master_SSL_Crl:
+			   Master_SSL_Crlpath:
+			   Retrieved_Gtid_Set:
+				Executed_Gtid_Set: 72cbaaad-c70e-11ed-b8e0-027862064586:1-3
+					Auto_Position: 1
+			 Replicate_Rewrite_DB:
+					 Channel_Name:
+			   Master_TLS_Version:
+		   Master_public_key_path:
+			Get_master_public_key: 0
+
+
+Again Data was inserted into the master server and then replicated to the slave server in MySQL.
+***********************************************************************************************
+
+mysql_SLAVE> select * from cust;	
+
+	+------+---------------------+
+	| id   | joindate            |
+	+------+---------------------+
+	|    1 | 2023-03-20 05:41:33 |
+	|    2 | 2023-03-20 05:41:37 |
+	|    3 | 2023-03-20 05:41:39 |
+	|    4 | 2023-03-20 11:57:17 |
+	|    6 | 2023-03-20 12:27:05 |
+	|    7 | 2023-03-22 07:49:54 |
+	|    7 | 2023-03-22 07:49:56 |
+	|    8 | 2023-03-22 07:49:59 |
+	|    9 | 2023-03-22 07:50:04 |
+	+------+---------------------+
+
+
+
+After completing the previous steps, you need to stop the slave replication and transfer the MySQL ALL user grants, stored procedures, and event scheduler from the master to the slave. Next, you should import the user data into the slave server and finally, you can call the procedure on the slave server.
+
+I am going to execute the "percona" stored procedure with an argument of 10000.
+
+
+mysql_SLAVE> call percona(10000);
+			Query OK, 1 row affected (1.64 sec)
+
+step 8:
+*******
+
+Upgrade the MySQL version of the master server from 5.7 to 8.0.15:
+******************************************************************
+
+Before upgrading, make sure to drop the stored procedures or restore them onto the slave server. Verify that they are running without issues on the slave server before proceeding with the upgrade
+
+
+
+NOW UPGRADING MYSQL MASTER NODE:
+*******************************
+
+$ yum update -y  
+
+$ mysqlcheck -uroot -pMaster@123 --all-databases --check-upgrade
+
+$ mysql_upgrade -uroot -pMaster@123
+
+
+		mysql_upgrade: [Warning] Using a password on the command line interface can be insecure.
+		Checking if update is needed.
+		Checking server version.
+		Running queries to upgrade MySQL server.
+		Upgrading system table data.
+		Checking system database.
+		mysql.columns_priv                                 OK
+		mysql.component                                    OK
+		mysql.db                                           OK
+		mysql.default_roles                                OK
+		mysql.engine_cost                                  OK
+		mysql.func                                         OK
+		mysql.general_log                                  OK
+		mysql.global_grants                                OK
+		mysql.gtid_executed                                OK
+		mysql.help_category                                OK
+		mysql.help_keyword                                 OK
+		mysql.help_relation                                OK
+		mysql.help_topic                                   OK
+		mysql.innodb_index_stats                           OK
+		mysql.innodb_table_stats                           OK
+		mysql.ndb_binlog_index                             OK
+		mysql.password_history                             OK
+		mysql.plugin                                       OK
+		mysql.procs_priv                                   OK
+		mysql.proxies_priv                                 OK
+		mysql.role_edges                                   OK
+		mysql.server_cost                                  OK
+		mysql.servers                                      OK
+		mysql.slave_master_info                            OK
+		mysql.slave_relay_log_info                         OK
+		mysql.slave_worker_info                            OK
+		mysql.slow_log                                     OK
+		mysql.tables_priv                                  OK
+		mysql.time_zone                                    OK
+		mysql.time_zone_leap_second                        OK
+		mysql.time_zone_name                               OK
+		mysql.time_zone_transition                         OK
+		mysql.time_zone_transition_type                    OK
+		mysql.user                                         OK
+		Found outdated sys schema version 1.5.2.
+		Upgrading the sys schema.
+		Checking databases.
+		EmployDB.employees                                 OK
+		EmployDB.userdata                                  OK
+		PerconaDB.percona                                  OK
+		TestDB.cust                                        OK
+		sakila.actor                                       OK
+		sakila.address                                     OK
+		sakila.category                                    OK
+		sakila.city                                        OK
+		sakila.country                                     OK
+		sakila.customer                                    OK
+		sakila.film                                        OK
+		sakila.film_actor                                  OK
+		sakila.film_category                               OK
+		sakila.film_text                                   OK
+		sakila.inventory                                   OK
+		sakila.language                                    OK
+		sakila.payment                                     OK
+		sakila.rental                                      OK
+		sakila.staff                                       OK
+		sakila.store                                       OK
+		sys.sys_config                                     OK
+		Upgrade process completed successfully.
+
+
+$ systemctl stop mysqld
+
+$ cp -p -r /var/lib/mysql /opt/
+
+$ yum list installed | grep -i mysql
+
+$ yum install yum-utils 
+
+$ rpm -ivh https://dev.mysql.com/get/mysql80-community-release-el7-3.noarch.rpm 
+ 
+$ repoquery --show-duplicate mysql*
+ 
+repoquery --show-duplicate mysql-community-common 
+repoquery --show-duplicate mysql-community-libs
+repoquery --show-duplicate mysql-community-client 
+repoquery --show-duplicate mysql-community-server
+
+yum install -y mysql-community-common-0:8.0.15-1.el7.x86_64
+yum install -y mysql-community-libs-0:8.0.15-1.el7.x86_64
+yum install -y mysql-community-client-0:8.0.15-1.el7.x86_64
+yum install -y mysql-community-server-0:8.0.15-1.el7.x86_64
+
+$ systemctl start mysqld
+
+$ mysqlcheck -uroot -p --all-databases --check-upgrade
+
+
+	mysql_MASTER> \s
+	--------------
+	mysql  Ver 8.0.15 for Linux on x86_64 (MySQL Community Server - GPL)
+
+	Connection id:          12
+	Current database:
+	Current user:           root@localhost
+	SSL:                    Not in use
+	Current pager:          stdout
+	Using outfile:          ''
+	Using delimiter:        ;
+	Server version:         8.0.15 MySQL Community Server - GPL
+	Protocol version:       10
+	Connection:             Localhost via UNIX socket
+	Server characterset:    utf8mb4
+	Db     characterset:    utf8mb4
+	Client characterset:    utf8mb4
+	Conn.  characterset:    utf8mb4
+	UNIX socket:            /var/lib/mysql/mysql.sock
+	Uptime:                 4 min 14 sec
+
+	Threads: 2  Questions: 13456  Slow queries: 0  Opens: 589  Flush tables: 2  Open tables: 244  Queries per second avg: 52.976
+	--------------
+
+	mysql> exit
+	Bye
+	root@Master_MYSQL:~#mysql --version
+	mysql  Ver 8.0.15 for Linux on x86_64 (MySQL Community Server - GPL)
+	
+
+
+step 9:
+*******
+
+To switch the role, we need to make the "MySQL slave server" the New "MySQL master server":
+******************************************************************************************* 
+
+	-This involves moving the data backup from the slave server (new master) to the master server (new slave). 
+
+	-We will need to use xtrabackup again for this process. 
+
+	-Once the data is moved to the old master server (new slave), the old master server data should be removed.
+	
+	
+
+COLD BACKUP:
+***********
+
+Here, I am using cold backup to restore data into old master server (new slave). 
+
+
+ON NEW MASTER SERVER:
+*********************
+
+mysql_NEW_MASTER> insert into cust(id) values(11);
+				  Query OK, 1 row affected (0.01 sec)
+
+
+mysql_NEW_MASTER> select * from cust;
+	+------+---------------------+
+	| id   | joindate            |
+	+------+---------------------+
+	|    1 | 2023-03-20 05:41:33 |
+	|    2 | 2023-03-20 05:41:37 |
+	|    3 | 2023-03-20 05:41:39 |
+	|    4 | 2023-03-20 11:57:17 |
+	|    6 | 2023-03-20 12:27:05 |
+	|    7 | 2023-03-22 07:49:54 |
+	|    7 | 2023-03-22 07:49:56 |
+	|    8 | 2023-03-22 07:49:59 |
+	|    9 | 2023-03-22 07:50:04 |
+	|   10 | 2023-03-23 01:55:15 |
+	|   11 | 2023-03-23 02:43:22 |
+	+------+---------------------+
+
+$ systemctl stop mysql
+
+
+Use the SCP command to copy the MySQL data to the new slave server:
+******************************************************************
+
+$ scp -r -p /var/lib/mysql centos@3.144.96.112:/home/centos/
+
+binlog.000005                                                                           100%  178    83.2KB/s   00:00
+binlog.000007                                                                           100%  178    71.4KB/s   00:00
+binlog.000019                                                                           100% 2294   998.5KB/s   00:00
+	
+ON NEW SLAVE SERVER:
+********************
+
+$ systemctl stop mysqld
+
+$ mv /home/centos/mysql /var/lib/
+
+$ chown -R mysql:mysql mysql
+
+$ systemctl start mysqld 
+
+
+
+mysql_NEW_SLAVE> select * from cust;
+	+------+---------------------+
+	| id   | joindate            |
+	+------+---------------------+
+	|    1 | 2023-03-20 05:41:33 |
+	|    2 | 2023-03-20 05:41:37 |
+	|    3 | 2023-03-20 05:41:39 |
+	|    4 | 2023-03-20 11:57:17 |
+	|    6 | 2023-03-20 12:27:05 |
+	|    7 | 2023-03-22 07:49:54 |
+	|    7 | 2023-03-22 07:49:56 |
+	|    8 | 2023-03-22 07:49:59 |
+	|    9 | 2023-03-22 07:50:04 |
+	|   10 | 2023-03-23 01:55:15 |
+	|   11 | 2023-03-23 02:43:22 |
+	+------+---------------------+
+
+
+
+step 10:
+********
+
+Finally, Configuring NEW MySQL Master - NEW MYSQL Slave NORMAL Replication
+**************************************************************************
+
+ON NEW MASTER NODE: -- 3.142.135.164
+******************
+
+$ vi /etc/my.cnf
+
+	server-id= 1
+	log_bin= mysql-bin
+	
+$ systemctl restart mysqld
+
+
+mysql_NEW_MASTER> show master status\G
+	*************************** 1. row ***************************
+				 File: mysql-bin.000008
+			 Position: 195
+		 Binlog_Do_DB:
+	 Binlog_Ignore_DB:
+	Executed_Gtid_Set: 280624f9-c706-11ed-b864-0208429b9914:1-121,
+	72cbaaad-c70e-11ed-b8e0-027862064586:1-8
+
+
+
+ON NEW SLAVE NODE: -- 18.224.33.73
+*****************
+
+$ vi /etc/my.cnf
+
+	server-id=2
+
+$ systemctl restart mysqld
+
+
+$ CHANGE MASTER TO MASTER_HOST = '3.142.135.164', MASTER_USER = 'slaverep1', MASTER_PASSWORD = 'Slave@123!@#', 
+MASTER_LOG_FILE = 'mysql-bin.000008', MASTER_LOG_POS =195;
+
+$ start slave;
+
+
+mysql_NEW_SLAVE> show slave status\G
+	*************************** 1. row ***************************
+				   Slave_IO_State: Waiting for master to send event
+					  Master_Host: 3.142.135.164
+					  Master_User: slaverep1
+					  Master_Port: 3306
+					Connect_Retry: 60
+				  Master_Log_File: mysql-bin.000008
+			  Read_Master_Log_Pos: 195
+				   Relay_Log_File: ip-172-31-7-108-relay-bin.000002
+					Relay_Log_Pos: 322
+			Relay_Master_Log_File: mysql-bin.000008
+				 Slave_IO_Running: Yes
+				Slave_SQL_Running: Yes
+				  Replicate_Do_DB:
+			  Replicate_Ignore_DB:
+			   Replicate_Do_Table:
+		   Replicate_Ignore_Table:
+		  Replicate_Wild_Do_Table:
+	  Replicate_Wild_Ignore_Table:
+					   Last_Errno: 0
+					   Last_Error:
+					 Skip_Counter: 0
+			  Exec_Master_Log_Pos: 195
+				  Relay_Log_Space: 540
+				  Until_Condition: None
+				   Until_Log_File:
+					Until_Log_Pos: 0
+			   Master_SSL_Allowed: No
+			   Master_SSL_CA_File:
+			   Master_SSL_CA_Path:
+				  Master_SSL_Cert:
+				Master_SSL_Cipher:
+				   Master_SSL_Key:
+			Seconds_Behind_Master: 0
+	Master_SSL_Verify_Server_Cert: No
+					Last_IO_Errno: 0
+					Last_IO_Error:
+				   Last_SQL_Errno: 0
+				   Last_SQL_Error:
+	  Replicate_Ignore_Server_Ids:
+				 Master_Server_Id: 1
+					  Master_UUID: 280624f9-c706-11ed-b864-0208429b9914
+				 Master_Info_File: mysql.slave_master_info
+						SQL_Delay: 0
+			  SQL_Remaining_Delay: NULL
+		  Slave_SQL_Running_State: Slave has read all relay log; waiting for more updates
+			   Master_Retry_Count: 86400
+					  Master_Bind:
+		  Last_IO_Error_Timestamp:
+		 Last_SQL_Error_Timestamp:
+				   Master_SSL_Crl:
+			   Master_SSL_Crlpath:
+			   Retrieved_Gtid_Set:
+				Executed_Gtid_Set: 280624f9-c706-11ed-b864-0208429b9914:1-121,
+	72cbaaad-c70e-11ed-b8e0-027862064586:1-8
+					Auto_Position: 0
+			 Replicate_Rewrite_DB:
+					 Channel_Name:
+			   Master_TLS_Version:
+		   Master_public_key_path:
+			Get_master_public_key: 0
+
+
+ONce Again we are inserting data into the new master server and then replicated to the new slave server in MySQL.
+****************************************************************************************************************
+
+mysql_NEW_SLAVE> select * from cust;	
+
+	+------+---------------------+
+	| id   | joindate            |
+	+------+---------------------+
+	|    1 | 2023-03-20 05:41:33 |
+	|    2 | 2023-03-20 05:41:37 |
+	|    3 | 2023-03-20 05:41:39 |
+	|    4 | 2023-03-20 11:57:17 |
+	|    6 | 2023-03-20 12:27:05 |
+	|    7 | 2023-03-22 07:49:54 |
+	|    7 | 2023-03-22 07:49:56 |
+	|    8 | 2023-03-22 07:49:59 |
+	|    9 | 2023-03-22 07:50:04 |
+	|   10 | 2023-03-23 01:55:15 |
+	|   11 | 2023-03-23 02:43:22 |
+	|   13 | 2023-03-23 06:22:37 |
+	|   12 | 2023-03-23 03:33:57 |
+	|   14 | 2023-03-23 06:40:16 |
+	+------+---------------------+
+	14 rows in set (0.00 sec)
