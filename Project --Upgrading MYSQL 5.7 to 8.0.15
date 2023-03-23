@@ -1013,60 +1013,60 @@ mysql_SLAVE> show slave status\G
 					  Master_User: slaveuser
 					  Master_Port: 3306
 					Connect_Retry: 60
-				  Master_Log_File: mysql-bin.000004
-			  Read_Master_Log_Pos: 194
-				   Relay_Log_File: ip-172-31-4-157-relay-bin.000002
+				      Master_Log_File: mysql-bin.000004
+			          Read_Master_Log_Pos: 194
+				       Relay_Log_File: ip-172-31-4-157-relay-bin.000002
 					Relay_Log_Pos: 368
-			Relay_Master_Log_File: mysql-bin.000004
-				 Slave_IO_Running: Yes
-				Slave_SQL_Running: Yes
-				  Replicate_Do_DB:
-			  Replicate_Ignore_DB:
-			   Replicate_Do_Table:
-		   Replicate_Ignore_Table:
-		  Replicate_Wild_Do_Table:
-	  Replicate_Wild_Ignore_Table:
+			        Relay_Master_Log_File: mysql-bin.000004
+				     Slave_IO_Running: Yes
+				    Slave_SQL_Running: Yes
+				      Replicate_Do_DB:
+			          Replicate_Ignore_DB:
+			           Replicate_Do_Table:
+		               Replicate_Ignore_Table:
+		              Replicate_Wild_Do_Table:
+	                  Replicate_Wild_Ignore_Table:
 					   Last_Errno: 0
 					   Last_Error:
 					 Skip_Counter: 0
-			  Exec_Master_Log_Pos: 194
-				  Relay_Log_Space: 586
-				  Until_Condition: None
-				   Until_Log_File:
+			          Exec_Master_Log_Pos: 194
+				      Relay_Log_Space: 586
+				      Until_Condition: None
+				       Until_Log_File:
 					Until_Log_Pos: 0
-			   Master_SSL_Allowed: No
-			   Master_SSL_CA_File:
-			   Master_SSL_CA_Path:
-				  Master_SSL_Cert:
-				Master_SSL_Cipher:
-				   Master_SSL_Key:
-			Seconds_Behind_Master: 0
-	Master_SSL_Verify_Server_Cert: No
+			           Master_SSL_Allowed: No
+			           Master_SSL_CA_File:
+			           Master_SSL_CA_Path:
+				      Master_SSL_Cert:
+				    Master_SSL_Cipher:
+				       Master_SSL_Key:
+			        Seconds_Behind_Master: 0
+	                Master_SSL_Verify_Server_Cert: No
 					Last_IO_Errno: 0
 					Last_IO_Error:
-				   Last_SQL_Errno: 0
-				   Last_SQL_Error:
-	  Replicate_Ignore_Server_Ids:
-				 Master_Server_Id: 1
+				       Last_SQL_Errno: 0
+				       Last_SQL_Error:
+	                  Replicate_Ignore_Server_Ids:
+				     Master_Server_Id: 1
 					  Master_UUID: 72cbaaad-c70e-11ed-b8e0-027862064586
-				 Master_Info_File: mysql.slave_master_info
-						SQL_Delay: 0
-			  SQL_Remaining_Delay: NULL
-		  Slave_SQL_Running_State: Slave has read all relay log; waiting for more updates
-			   Master_Retry_Count: 86400
+				     Master_Info_File: mysql.slave_master_info
+					    SQL_Delay: 0
+			          SQL_Remaining_Delay: NULL
+		              Slave_SQL_Running_State: Slave has read all relay log; waiting for more updates
+			           Master_Retry_Count: 86400
 					  Master_Bind:
-		  Last_IO_Error_Timestamp:
-		 Last_SQL_Error_Timestamp:
-				   Master_SSL_Crl:
-			   Master_SSL_Crlpath:
-			   Retrieved_Gtid_Set:
-				Executed_Gtid_Set: 72cbaaad-c70e-11ed-b8e0-027862064586:1-3
+		              Last_IO_Error_Timestamp:
+		             Last_SQL_Error_Timestamp:
+				       Master_SSL_Crl:
+			           Master_SSL_Crlpath:
+			           Retrieved_Gtid_Set:
+				    Executed_Gtid_Set: 72cbaaad-c70e-11ed-b8e0-027862064586:1-3
 					Auto_Position: 1
-			 Replicate_Rewrite_DB:
+			         Replicate_Rewrite_DB:
 					 Channel_Name:
-			   Master_TLS_Version:
-		   Master_public_key_path:
-			Get_master_public_key: 0
+			           Master_TLS_Version:
+		               Master_public_key_path:
+			        Get_master_public_key: 0
 
 
 Again Data was inserted into the master server and then replicated to the slave server in MySQL.
@@ -1383,61 +1383,61 @@ mysql_NEW_SLAVE> show slave status\G
 					  Master_User: slaverep1
 					  Master_Port: 3306
 					Connect_Retry: 60
-				  Master_Log_File: mysql-bin.000008
-			  Read_Master_Log_Pos: 195
-				   Relay_Log_File: ip-172-31-7-108-relay-bin.000002
+				      Master_Log_File: mysql-bin.000008
+			          Read_Master_Log_Pos: 195
+				       Relay_Log_File: ip-172-31-7-108-relay-bin.000002
 					Relay_Log_Pos: 322
-			Relay_Master_Log_File: mysql-bin.000008
-				 Slave_IO_Running: Yes
-				Slave_SQL_Running: Yes
-				  Replicate_Do_DB:
-			  Replicate_Ignore_DB:
-			   Replicate_Do_Table:
-		   Replicate_Ignore_Table:
-		  Replicate_Wild_Do_Table:
-	  Replicate_Wild_Ignore_Table:
+			        Relay_Master_Log_File: mysql-bin.000008
+				     Slave_IO_Running: Yes
+				    Slave_SQL_Running: Yes
+				      Replicate_Do_DB:
+			          Replicate_Ignore_DB:
+			           Replicate_Do_Table:
+		               Replicate_Ignore_Table:
+		              Replicate_Wild_Do_Table:
+	                  Replicate_Wild_Ignore_Table:
 					   Last_Errno: 0
 					   Last_Error:
 					 Skip_Counter: 0
-			  Exec_Master_Log_Pos: 195
-				  Relay_Log_Space: 540
-				  Until_Condition: None
-				   Until_Log_File:
+			          Exec_Master_Log_Pos: 195
+				      Relay_Log_Space: 540
+				      Until_Condition: None
+				       Until_Log_File:
 					Until_Log_Pos: 0
-			   Master_SSL_Allowed: No
-			   Master_SSL_CA_File:
-			   Master_SSL_CA_Path:
-				  Master_SSL_Cert:
-				Master_SSL_Cipher:
-				   Master_SSL_Key:
-			Seconds_Behind_Master: 0
-	Master_SSL_Verify_Server_Cert: No
+			           Master_SSL_Allowed: No
+			           Master_SSL_CA_File:
+			           Master_SSL_CA_Path:
+				      Master_SSL_Cert:
+				    Master_SSL_Cipher:
+				       Master_SSL_Key:
+			        Seconds_Behind_Master: 0
+	                 Master_SSL_Verify_Server_Cert: No
 					Last_IO_Errno: 0
 					Last_IO_Error:
-				   Last_SQL_Errno: 0
-				   Last_SQL_Error:
-	  Replicate_Ignore_Server_Ids:
-				 Master_Server_Id: 1
+				       Last_SQL_Errno: 0
+				       Last_SQL_Error:
+	                  Replicate_Ignore_Server_Ids:
+				     Master_Server_Id: 1
 					  Master_UUID: 280624f9-c706-11ed-b864-0208429b9914
-				 Master_Info_File: mysql.slave_master_info
-						SQL_Delay: 0
-			  SQL_Remaining_Delay: NULL
-		  Slave_SQL_Running_State: Slave has read all relay log; waiting for more updates
-			   Master_Retry_Count: 86400
+				     Master_Info_File: mysql.slave_master_info
+					    SQL_Delay: 0
+			          SQL_Remaining_Delay: NULL
+		              Slave_SQL_Running_State: Slave has read all relay log; waiting for more updates
+			           Master_Retry_Count: 86400
 					  Master_Bind:
-		  Last_IO_Error_Timestamp:
-		 Last_SQL_Error_Timestamp:
-				   Master_SSL_Crl:
-			   Master_SSL_Crlpath:
-			   Retrieved_Gtid_Set:
-				Executed_Gtid_Set: 280624f9-c706-11ed-b864-0208429b9914:1-121,
-	72cbaaad-c70e-11ed-b8e0-027862064586:1-8
+		              Last_IO_Error_Timestamp:
+		             Last_SQL_Error_Timestamp:
+			 	       Master_SSL_Crl:
+			           Master_SSL_Crlpath:
+			           Retrieved_Gtid_Set:
+				    Executed_Gtid_Set: 280624f9-c706-11ed-b864-0208429b9914:1-121,
+	         72cbaaad-c70e-11ed-b8e0-027862064586:1-8
 					Auto_Position: 0
-			 Replicate_Rewrite_DB:
+			         Replicate_Rewrite_DB:
 					 Channel_Name:
-			   Master_TLS_Version:
-		   Master_public_key_path:
-			Get_master_public_key: 0
+			           Master_TLS_Version:
+		               Master_public_key_path:
+			        Get_master_public_key: 0
 
 
 ONce Again we are inserting data into the new master server and then replicated to the new slave server in MySQL.
