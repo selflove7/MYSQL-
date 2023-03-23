@@ -1,8 +1,4 @@
-#Step 1:
-# This is a Heading
-## This is a Subheading
-
-<h3> Setup </h3>
+Step 1:
 *******
 
 Launching two servers for Master and Slave & Installing MYSQL 5.7 version!!
